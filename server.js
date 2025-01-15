@@ -7,23 +7,37 @@ import userProfie from "./routes/userRoute.js";
 import spaceRoutes from "./routes/spaceRoutes.js";
 import multer from "multer";
 import mbtiRoutes from "./routes/mibtRoute.js";
-
+import http from 'http';
+import { Server } from 'socket.io';
+import messageRoutes from './routes/messageRoutes.js';
+import { setupSocket } from './socket/socketHandler.js';
 import matchRoutes from './routes/similarityRoute.js';
 import path from "path";
 import { fileURLToPath } from "url";
+import bodyParser from 'body-parser';
 
 dotenv.config();
 
 const app = express();
-
+const server = http.createServer(app);
 app.use(express.json());
 app.use(
   cors({
     credentials: true,
   })
 );
+const io = new Server(server, {
+  cors: {
+    origin: '*', 
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  },
+});
+app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 const mongoURI = process.env.MONGODB_URI;
 if (!mongoURI) {
   console.error(
@@ -45,7 +59,8 @@ app.use('/api/space', spaceRoutes);
 app.use('/api/matches', matchRoutes);
 
 app.use('/profile', userProfie);
-
+setupSocket(io);
+app.use('/api/messages', messageRoutes);
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {

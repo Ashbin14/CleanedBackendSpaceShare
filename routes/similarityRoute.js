@@ -4,6 +4,8 @@ import MatchResult from '../models/matcheduser.js';
 import User from '../models/user.js';
 import findMBTIMatches  from '../controllers/smilarSearchController.js';
 import authenticateUser from './middleware/authUser.js';
+import { debug } from 'console';
+
 
 const router = express.Router();
 
@@ -13,17 +15,15 @@ router.post('/calculate-matches',authenticateUser, async (req, res) => {
     session.startTransaction();
 
     try {
-        const { userId } = req.user.userId;
-
-
+        const userId  = req.user.userId;
+        console.log(userId)
         const user = await User.findById(userId);
+        console.log("user :",user)
         if (!user) {
             throw new Error('User not found');
         }
-
-        // maximum bipartile wala yaha bata call vai rako cha
+        // maximum bipartile wala algo chai yaha bata call vai rako cha
         const matchResults = await findMBTIMatches(userId);
-
         const matchDocument = {
             userId: userId,
             matches: matchResults.matches.map(match => ({
@@ -36,7 +36,6 @@ router.post('/calculate-matches',authenticateUser, async (req, res) => {
             calculatedAt: new Date()
         };
 
-        // Store or update matches in database
         await MatchResult.findOneAndUpdate(
             { userId: userId },
             matchDocument,
@@ -64,10 +63,11 @@ router.post('/calculate-matches',authenticateUser, async (req, res) => {
     }
 });
 
-// Get stored matches for a user
+
 router.get('/matches/',authenticateUser, async (req, res) => {
     try {
-        const { userId } = req.user.userId;
+        const userId  = req.user.userId;
+        console.log("user id",userId)
         const { 
             minSimilarity = 0,
             limit = 10,
