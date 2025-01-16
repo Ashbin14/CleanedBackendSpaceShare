@@ -15,6 +15,7 @@ import matchRoutes from './routes/similarityRoute.js';
 import path from "path";
 import { fileURLToPath } from "url";
 import bodyParser from 'body-parser';
+import { seedDatabase } from "./routes/seed.js";
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ app.use('/mibt',mbtiRoutes);
 
 app.use('/api/space', spaceRoutes);
 app.use('/api/matches', matchRoutes);
+app.post('/api/seed', seedDatabase);  
 
 app.use('/profile', userProfie);
 setupSocket(io);

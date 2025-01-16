@@ -134,6 +134,7 @@ router.get('/matches/',authenticateUser, async (req, res) => {
                 path: 'matches.matchedUserId',
                 select: 'firstName lastName email age gender phoneNumber images'
             });
+        console.log("length", matchResults)
 
         if (!matchResults) {
             return res.status(404).json({

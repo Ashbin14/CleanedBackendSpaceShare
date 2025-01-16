@@ -16,7 +16,7 @@ const calculateSimilarityScore = (user1Analysis, user2Analysis) => {
                 user1Analysis.preferenceBreakdown[`${pref}Percentage`] - 
                 user2Analysis.preferenceBreakdown[`${pref}Percentage`]
             );
-            score += (100 - percentageDiff) * 0.075; // Max 30 points for preferences (7.5 each)
+            score += (100 - percentageDiff) * 0.075;
         }
     });
 
