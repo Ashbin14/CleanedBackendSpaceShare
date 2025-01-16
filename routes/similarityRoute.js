@@ -10,20 +10,76 @@ import { debug } from 'console';
 const router = express.Router();
 
 
-router.post('/calculate-matches',authenticateUser, async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+// router.post('/calculate-matches',authenticateUser, async (req, res) => {
+//     // const session = await mongoose.startSession();
+//     // session.startTransaction();
 
+//     try {
+//         const userId  = req.user.userId;
+//         console.log(userId)
+//         const user = await User.findById(userId);
+//         console.log("user :",user)
+//         if (!user) {
+//             throw new Error('User not found');
+//         }
+//         // maximum bipartile wala algo chai yaha bata call vai rako cha
+//         const matchResults = await findMBTIMatches(userId);
+//         const matchDocument = {
+//             userId: userId,
+//             matches: matchResults.matches.map(match => ({
+//                 matchedUserId: match.user._id,
+//                 similarityScore: match.similarity,
+//                 mbtiType: match.mbtiType,
+//                 timestamp: new Date()
+//             })),
+//             totalMatches: matchResults.totalMatches,
+//             calculatedAt: new Date()
+//         };
+
+//         await MatchResult.findOneAndUpdate(
+//             { userId: userId },
+//             matchDocument,
+//             { upsert: true, new: true, session }
+//         );
+
+//        // await session.commitTransaction();
+
+//         res.status(200).json({
+//             status: 'success',
+//             data: {
+//                 matches: matchResults.matches,
+//                 totalMatches: matchResults.totalMatches
+//             }
+//         });
+
+//     } catch (error) {
+//         // await session.abortTransaction();
+//         res.status(400).json({
+//             status: 'error',
+//             message: error.message
+//         });
+//     } finally {
+//         // session.endSession();
+//     }
+// });
+router.post('/calculate-matches', authenticateUser, async (req, res) => {
     try {
-        const userId  = req.user.userId;
-        console.log(userId)
+        const userId = req.user.userId;
+        console.log(userId);
+
+        // Fetch the user from the database
         const user = await User.findById(userId);
-        console.log("user :",user)
+        console.log("user :", user);
+
+        // If the user is not found, throw an error
         if (!user) {
             throw new Error('User not found');
         }
-        // maximum bipartile wala algo chai yaha bata call vai rako cha
+
+        // Proceed with calculating matches only after the user is found
         const matchResults = await findMBTIMatches(userId);
+
+        // Construct the match document to be saved
         const matchDocument = {
             userId: userId,
             matches: matchResults.matches.map(match => ({
@@ -36,14 +92,14 @@ router.post('/calculate-matches',authenticateUser, async (req, res) => {
             calculatedAt: new Date()
         };
 
+        // Update or create the match results document without a transaction
         await MatchResult.findOneAndUpdate(
             { userId: userId },
             matchDocument,
-            { upsert: true, new: true, session }
+            { upsert: true, new: true }
         );
 
-        await session.commitTransaction();
-
+        // Send success response
         res.status(200).json({
             status: 'success',
             data: {
@@ -53,13 +109,10 @@ router.post('/calculate-matches',authenticateUser, async (req, res) => {
         });
 
     } catch (error) {
-        await session.abortTransaction();
         res.status(400).json({
             status: 'error',
             message: error.message
         });
-    } finally {
-        session.endSession();
     }
 });
 
