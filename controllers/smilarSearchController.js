@@ -10,26 +10,8 @@ const calculateSimilarityScore = (user1Analysis, user2Analysis) => {
     
     const personalityScoreDiff = Math.abs(user1Analysis.overallPersonalityScore - user2Analysis.overallPersonalityScore);
     score += (100 - personalityScoreDiff) * 0.2;
-    const preferences = ['EI', 'SN', 'TF', 'JP'];
-    preferences.forEach(pref => {
-        if (user1Analysis.preferenceBreakdown[pref] === user2Analysis.preferenceBreakdown[pref]) {
-            const percentageDiff = Math.abs(
-                user1Analysis.preferenceBreakdown[`${pref}Percentage`] - 
-                user2Analysis.preferenceBreakdown[`${pref}Percentage`]
-            );
-            score += (100 - percentageDiff) * 0.075;
-        }
-    });
-    console.log("personlaity score diff")
-    const traits = Object.keys(user1Analysis.traitDevelopmentScores);
-    traits.forEach(trait => {
-        const traitDiff = Math.abs(
-            user1Analysis.traitDevelopmentScores[trait] - 
-            user2Analysis.traitDevelopmentScores[trait]
-        );
-        score += (100 - traitDiff) * 0.02857; // Max 20 points for traits (≈2.857 each for 7 traits)
-    });
-
+    console.log("personlaity score diff");
+    console.log(score);
     return Math.round(score * 100) / 100;
 };
 
@@ -47,11 +29,10 @@ const findMaximumMatching = (graph, matches, seen, u) => {
     return false;
 };
 
-const findMBTIMatches = async (userId, threshold = 70) => {
+const findMBTIMatches = async (userId, threshold = 18) => {
     try {
         console.log("here ");
         const currentUserAnalysis = await MBTIAnalysis.findOne({ userId }).populate('userId');
-        console.log(currentUserAnalysis)
         if (!currentUserAnalysis) {
             throw new Error('No MBTI analysis found for current user');
         }
@@ -59,7 +40,6 @@ const findMBTIMatches = async (userId, threshold = 70) => {
         const otherAnalyses = await MBTIAnalysis.find({
             userId: { $ne: userId }
         }).populate('userId');
-
         const similarities = otherAnalyses.map(analysis => ({
             userId: analysis.userId._id,
             similarity: calculateSimilarityScore(currentUserAnalysis, analysis),
@@ -69,7 +49,6 @@ const findMBTIMatches = async (userId, threshold = 70) => {
         const n = similarities.length;
         const graph = Array(n).fill().map(() => Array(n).fill(0));
         
-        // Fill graph with edges where similarity exceeds threshold
         for (let i = 0; i < n; i++) {
             for (let j = 0; j < n; j++) {
                 if (i !== j && similarities[i].similarity >= threshold) {
@@ -84,6 +63,7 @@ const findMBTIMatches = async (userId, threshold = 70) => {
             const seen = Array(n).fill(false);
             if (findMaximumMatching(graph, matches, seen, u)) {
                 matchCount++;
+                console.log(matchCount);
             }
         }
         const matchedUsers = [];
@@ -109,5 +89,8 @@ const findMBTIMatches = async (userId, threshold = 70) => {
         throw error;
     }
 };
+const filterMatches= async(req,res)=>{
+    
+}
 
 export default findMBTIMatches;
