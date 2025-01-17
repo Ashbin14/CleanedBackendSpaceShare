@@ -89,8 +89,5 @@ const findMBTIMatches = async (userId, threshold = 18) => {
         throw error;
     }
 };
-const filterMatches= async(req,res)=>{
-    
-}
 
 export default findMBTIMatches;
