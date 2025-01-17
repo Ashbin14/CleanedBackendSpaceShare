@@ -41,29 +41,28 @@ const createSpace = async (req, res) => {
 
 const getSpaces = async (req, res) => {
   try {
-    const { page = 1, limit = 10, sortBy = 'monthlyRent', order = 'asc' } = req.query;
+    const { latitude, longitude, maxDistance } = req.query;
+    if (latitude && longitude) {
+      const spaces = await Space.find({
+        location: {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [longitude, latitude]  // [longitude, latitude]
+            },
+            $maxDistance: maxDistance || 10000  // Default to 10 km
+          }
+        }
+      });
 
-    const sortOrder = order === 'desc' ? -1 : 1;
+      return res.status(200).json({ status: 'success', data: spaces });
+    }
 
-    const spaces = await Space.find()
-      .skip((page - 1) * limit)
-      .limit(Number(limit))
-      .sort({ [sortBy]: sortOrder })
-      .select('title location monthlyRent roomType description');
-
-    const totalSpaces = await Space.countDocuments();
-
-    res.status(200).json({
-      status: 'success',
-      data: spaces,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalSpaces / limit),
-        totalItems: totalSpaces,
-      },
-    });
+    // If no geospatial query is needed, return all spaces for the authenticated user
+    const spaces = await Space.find({ userId: req.user.userId });
+    res.status(200).json({ status: 'success', data: spaces });
   } catch (error) {
-    console.error('Get all spaces error:', error);
+    console.error('Get spaces error:', error);
     res.status(500).json({ status: 'error', message: 'Server error' });
   }
 };

@@ -78,7 +78,7 @@ router.post('/calculate-matches', authenticateUser, async (req, res) => {
 
         // Proceed with calculating matches only after the user is found
         const matchResults = await findMBTIMatches(userId);
-
+        console.log("matchresult");
         // Construct the match document to be saved
         const matchDocument = {
             userId: userId,

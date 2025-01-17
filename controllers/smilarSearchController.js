@@ -1,3 +1,4 @@
+import { debug } from 'console';
 import MBTIAnalysis from '../models/data.js';
 
 const calculateSimilarityScore = (user1Analysis, user2Analysis) => {
@@ -19,7 +20,7 @@ const calculateSimilarityScore = (user1Analysis, user2Analysis) => {
             score += (100 - percentageDiff) * 0.075;
         }
     });
-
+    console.log("personlaity score diff")
     const traits = Object.keys(user1Analysis.traitDevelopmentScores);
     traits.forEach(trait => {
         const traitDiff = Math.abs(
@@ -48,10 +49,13 @@ const findMaximumMatching = (graph, matches, seen, u) => {
 
 const findMBTIMatches = async (userId, threshold = 70) => {
     try {
+        console.log("here ");
         const currentUserAnalysis = await MBTIAnalysis.findOne({ userId }).populate('userId');
+        console.log(currentUserAnalysis)
         if (!currentUserAnalysis) {
             throw new Error('No MBTI analysis found for current user');
         }
+        console.log("here find mibt");
         const otherAnalyses = await MBTIAnalysis.find({
             userId: { $ne: userId }
         }).populate('userId');
