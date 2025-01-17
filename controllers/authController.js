@@ -83,8 +83,8 @@ const register = async (req, res) => {
     });
 
     const result = await user.save();
-    result.password = undefined; 
-
+    result.password = undefined;
+ 
     res.status(201).json({
       status: "success",
       message: "Registration successful",

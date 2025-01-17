@@ -6,41 +6,32 @@ import path from 'path';
 
 const validateScores = (scores) => {
     return Array.isArray(scores) && 
-           scores.length === 4 && 
+           scores.length === 20 &&
            scores.every(score => typeof score === 'number');
 };
 const analyzePersonality = async (req, res) => {
-    console.log(req.id);
-    
       if (!req.id) {
         return res.status(401).json({ error: 'User not authenticated.' });
       }
     const {scores} = req.body;
-    console.log(scores);
     const userId=req.id;
     console.log(req.body);
     if (!validateScores(scores)) {
         return res.status(400).json({
-           
-            error: 'Invalid input: Expected array of 4 numeric scores'
+            error: 'Invalid input: Expected array of 20 numeric scores'
         });
     }
-
     try {
         const pythonResult = await runPythonAnalysis(scores);
-        
+        console.log("python result",pythonResult);
         const formattedResult = formatAnalysisResult(pythonResult);
+        console.log(formattedResult);
         const mbtiAnalysis = new MBTIAnalysis({
-            userId:userId,
+            userId: userId, 
             type: formattedResult.type,
             overallPersonalityScore: formattedResult.overallScore,
             preferenceAlignment: formattedResult.preferenceAlignment,
-            dominantTraits: {
-                organization: formattedResult.traits.organization,
-                reliability: formattedResult.traits.reliability,
-                analysis: formattedResult.traits.analysis,
-                logic: formattedResult.traits.logic
-            },
+
             preferenceBreakdown: {
                 EI: formattedResult.preferences.EI.preference,
                 EIPercentage: formattedResult.preferences.EI.percentage,
@@ -51,17 +42,9 @@ const analyzePersonality = async (req, res) => {
                 JP: formattedResult.preferences.JP.preference,
                 JPPercentage: formattedResult.preferences.JP.percentage
             },
-            traitDevelopmentScores: {
-                organization: formattedResult.development.organization,
-                detail: formattedResult.development.detail,
-                logic: formattedResult.development.logic,
-                reliability: formattedResult.development.reliability,
-                analysis: formattedResult.development.analysis,
-                innovation: formattedResult.development.innovation,
-                adaptability: formattedResult.development.adaptability
-            },
-            cognitiveFunctions: formattedResult.cognitiveFunctions
+           
         });
+
         await mbtiAnalysis.save();
         res.json({
             analysisId: mbtiAnalysis._id,
@@ -79,13 +62,13 @@ const analyzePersonality = async (req, res) => {
 
 const runPythonAnalysis = (scores) => {
     return new Promise((resolve, reject) => {
-        console.log(scores)
-        const [score1, score2, score3, score4] = scores;
-        const pythonProcess = spawn('python', ['mbti_predictor.py',score1,score2,score3,score4]);
+        const [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20
+        ] = scores;
+        const pythonProcess = spawn('python', ['mbti_predictor.py',s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20]);
         
         let result = '';
         let error = '';
-
+    
         pythonProcess.stdout.on('data', (data) => {
             result += data.toString();
             console.log(result);
@@ -117,10 +100,10 @@ const runPythonAnalysis = (scores) => {
 
             try {
                 const trimmedResult = result.trim();
+                console.log(trimmedResult);
                 if (!trimmedResult) {
                     throw new Error('Empty result from Python script');
                 }
-                
                 const parsedResult = JSON.parse(trimmedResult); // Expecting JSON output
                 resolve(parsedResult);
             } catch (e) {
@@ -159,7 +142,6 @@ const formatAnalysisResult = (result) => {
             trait,
             value
         }));
-        const cognitiveFunctions = data.cognitive_functions.map(([code, _]) => code);
         
 
         return {
@@ -181,7 +163,6 @@ const formatAnalysisResult = (result) => {
                 innovation: data.personality_scores.trait_development.Innovation,
                 peopleOriented: data.personality_scores.trait_development['People-oriented'],
             },
-            cognitiveFunctions: cognitiveFunctions  
         };
     } catch (error) {
         throw new Error('Failed to parse Python script output: ' + error.message);

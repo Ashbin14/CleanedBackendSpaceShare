@@ -84,8 +84,6 @@ const updateSpace = async (req, res) => {
   try {
     const { title, location, monthlyRent, roomType, description, amenities, flatmatePreferences } = req.body;
     const images = req.files ? req.files.map(file => file.path) : [];
-
-    // Assuming location is being passed as { latitude, longitude }
     const geoLocation = location ? {
       type: 'Point',
       coordinates: [location.longitude, location.latitude]  // [longitude, latitude]
