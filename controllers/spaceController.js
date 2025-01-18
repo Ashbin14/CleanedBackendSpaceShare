@@ -1,14 +1,8 @@
-<<<<<<< HEAD
-import { Space } from '../models/space.js';
-import { getFileUrl } from '../config/multerconfig.js';
-import  userInfo  from  '../models/user.js';
-import path from 'path';
-=======
 import { Space } from "../models/space.js";
 import { getFileUrl } from "../config/multerconfig.js";
 import path from "path";
 import User from "../models/user.js";
->>>>>>> 6b3bd40707bdc9db294bb677b31725c1475f78d7
+
 
 const createSpace = async (req, res) => {
   try {
