@@ -8,7 +8,7 @@ import spaceRoutes from "./routes/spaceRoutes.js";
 import multer from "multer";
 import mbtiRoutes from "./routes/mibtRoute.js";
 import http from "http";
-import { Server } from "socket.io";
+// import { Server } from "socket.io";
 import messageRoutes from "./routes/messageRoutes.js";
 // import { setupSocket } from "./socket/socketHandler.js";
 import { app, server } from "./socket/socketHandler.js";
@@ -27,18 +27,27 @@ app.use(
     credentials: true,
   })
 );
-const io = new Server(server, {
-  cors: {
+app.use(
+  cors({
     origin: "*",
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-  },
-});
+    credentials: true,
+  })
+);
+
+app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
+// const io = new Server(server, {
+//   cors: {
+//     origin: "*",
+//     methods: ["GET", "POST", "PATCH", "DELETE"],
+//   },
+// });
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
+// app.use((req, res, next) => {
+//   req.io = io;
+//   next();
+// });
 const mongoURI = process.env.MONGODB_URI;
 if (!mongoURI) {
   console.error(
