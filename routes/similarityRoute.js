@@ -139,7 +139,7 @@ router.get('/matches/filter', authenticateUser, async (req, res) => {
 
                 if (gender && matchedUser.gender !== gender) return false;
 
-                if (maxDistance && userLatitude && userLongitude && matchedUser.location) {
+                if (maxDistance  && matchedUser.location) {
                     const distance = calculateDistance(latitude, longitude , matchedUser.location.latitude, matchedUser.location.longitude);
                     if (distance > maxDistance) return false;
                 }
