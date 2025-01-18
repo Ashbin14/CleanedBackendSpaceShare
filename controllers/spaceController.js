@@ -1,6 +1,7 @@
 import { Space } from '../models/space.js';
 import { getFileUrl } from '../config/multerconfig.js';
 import path from 'path';
+import User from '../models/user.js';
 
 const createSpace = async (req, res) => {
   try {
@@ -71,12 +72,18 @@ const getSpaceById = async (req, res) => {
   try {
     const space = await Space.findById(req.params.id);
     if (!space) {
-      return res.status(404).json({ status: 'error', message: 'Space not found' });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Space not found" });
     }
-    res.status(200).json({ status: 'success', data: space });
+    const user = await User.findById(space.userId);
+    if(!user) {
+      return res.status(404).json({status:"error", message: "User not found"})
+    }
+    res.status(200).json({ status: "success", user: user, data: space });
   } catch (error) {
-    console.error('Get space by ID error:', error);
-    res.status(500).json({ status: 'error', message: 'Server error' });
+    console.error("Get space by ID error:", error);
+    res.status(500).json({ status: "error", message: "Server error" });
   }
 };
 
