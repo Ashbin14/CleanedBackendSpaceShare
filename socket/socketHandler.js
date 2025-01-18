@@ -1,39 +1,37 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/user.js';
+import { Server } from "socket.io";
+import http from "http";
+import express from "express";
 
-export const setupSocket = (io) => {
-  io.use(async (socket, next) => {
-    try {
-      const token = socket.handshake.auth.token;
-      if (!token) {
-        return next(new Error('Authentication required'));
-      }
+const app = express();
+const server = http.createServer(app);
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.userId);
-      if (!user) {
-        return next(new Error('User not found'));
-      }
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173"],
+  },
+});
 
-      socket.user = user;
-      next();
-    } catch (error) {
-      next(new Error('Authentication failed'));
-    }
+export function getReceiverSocketId(userId) {
+  return userSocketMap[userId];
+}
+
+// used to store online users
+const userSocketMap = {}; // {userId: socketId}
+
+io.on("connection", (socket) => {
+  console.log("A user connected", socket.id);
+
+  const userId = socket.handshake.query.userId;
+  if (userId) userSocketMap[userId] = socket.id;
+
+  // io.emit() is used to send events to all the connected clients
+  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected", socket.id);
+    delete userSocketMap[userId];
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
+});
 
-  io.on('connection', (socket) => {
-    socket.join(socket.user._id.toString());
-
-    socket.on('typing', (data) => {
-      socket.to(data.receiverId).emit('userTyping', {
-        userId: socket.user._id,
-        typing: data.typing
-      });
-    });
-
-    socket.on('disconnect', () => {
-
-    });
-  });
-};
+export { io, app, server };

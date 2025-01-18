@@ -7,19 +7,20 @@ import userProfie from "./routes/userRoute.js";
 import spaceRoutes from "./routes/spaceRoutes.js";
 import multer from "multer";
 import mbtiRoutes from "./routes/mibtRoute.js";
-import http from 'http';
-import { Server } from 'socket.io';
-import messageRoutes from './routes/messageRoutes.js';
-import { setupSocket } from './socket/socketHandler.js';
-import matchRoutes from './routes/similarityRoute.js';
+import http from "http";
+import { Server } from "socket.io";
+import messageRoutes from "./routes/messageRoutes.js";
+// import { setupSocket } from "./socket/socketHandler.js";
+import { app, server } from "./socket/socketHandler.js";
+import matchRoutes from "./routes/similarityRoute.js";
 import path from "path";
 import { fileURLToPath } from "url";
-import bodyParser from 'body-parser';
+import bodyParser from "body-parser";
 
 dotenv.config();
 
-const app = express();
-const server = http.createServer(app);
+// const app = express();
+// const server = http.createServer(app);
 app.use(express.json());
 app.use(
   cors({
@@ -28,8 +29,8 @@ app.use(
 );
 const io = new Server(server, {
   cors: {
-    origin: '*', 
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    origin: "*",
+    methods: ["GET", "POST", "PATCH", "DELETE"],
   },
 });
 app.use(bodyParser.json());
@@ -53,14 +54,14 @@ mongoose
 
 app.use("/api/auth", authRoutes);
 app.use("/uploads/", express.static("uploads"));
-app.use('/mibt',mbtiRoutes);
+app.use("/mibt", mbtiRoutes);
 
-app.use('/api/space', spaceRoutes);
-app.use('/api/matches', matchRoutes);
+app.use("/api/space", spaceRoutes);
+app.use("/api/matches", matchRoutes);
 
-app.use('/profile', userProfie);
-setupSocket(io);
-app.use('/api/messages', messageRoutes);
+app.use("/profile", userProfie);
+// setupSocket(io);
+app.use("/api/messages", messageRoutes);
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
@@ -80,17 +81,17 @@ app.use((error, req, res, next) => {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.get('/spaces/:filename', (req, res) => {
+app.get("/spaces/:filename", (req, res) => {
   // console.log(req.params.filename)
-  const filePath = path.join(__dirname,'spaces', req.params.filename);
-  console.log(filePath)
+  const filePath = path.join(__dirname, "spaces", req.params.filename);
+  console.log(filePath);
 
   // Send the file
   res.sendFile(filePath, (err) => {
-      if (err) {
-          console.error('Error sending file:', err);
-          res.status(404).send('File not found');
-      }
+    if (err) {
+      console.error("Error sending file:", err);
+      res.status(404).send("File not found");
+    }
   });
 });
 
