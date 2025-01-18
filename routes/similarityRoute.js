@@ -132,7 +132,7 @@ router.get('/matches/',authenticateUser, async (req, res) => {
         const matchResults = await MatchResult.findOne({ userId })
             .populate({
                 path: 'matches.matchedUserId',
-                select: 'firstName lastName email age gender phoneNumber images'
+                select: 'firstName lastName email age gender phoneNumber images location'
             });
         console.log("length", matchResults)
 
@@ -142,7 +142,6 @@ router.get('/matches/',authenticateUser, async (req, res) => {
                 message: 'No matches found for this user'
             });
         }
-
         const filteredMatches = matchResults.matches
             .filter(match => match.similarityScore >= minSimilarity)
             .sort((a, b) => b.similarityScore - a.similarityScore)

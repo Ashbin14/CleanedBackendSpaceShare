@@ -34,6 +34,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    location: {
+      type: {
+        type: String,   
+        enum: ['Point'],
+        required: true
+      },
+      coordinates: {
+        type: [Number], 
+        required: true
+      }
+    },
     images: [{
       type: String
     }]
@@ -42,6 +53,7 @@ const userSchema = new mongoose.Schema(
     timestamps: true, 
   }
 );
+userSchema.index({location:'2dsphere'})
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();

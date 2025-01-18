@@ -55,7 +55,7 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
   try {
-    const { firstName, lastName,age,gender,phoneNumber, email, password} = req.body;
+    const { firstName, lastName,age,gender,phoneNumber, email, password,location} = req.body;
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
         status: "error",
@@ -70,7 +70,10 @@ const register = async (req, res) => {
         message: "User already exists",
       });
     }
-
+    const geoLocation = location ? {
+      type: 'Point',
+      coordinates: [location.longitude, location.latitude]  // [longitude, latitude]
+    } : undefined;
     const user = new User({
       firstName,
       lastName,
@@ -78,6 +81,7 @@ const register = async (req, res) => {
       gender,
       phoneNumber,
       email,
+      location: geoLocation,
       password,
       imageFiles
     });
