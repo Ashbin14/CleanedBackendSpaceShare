@@ -1,5 +1,6 @@
 import { Space } from '../models/space.js';
 import { getFileUrl } from '../config/multerconfig.js';
+import  userInfo  from  '../models/user.js';
 import path from 'path';
 
 const createSpace = async (req, res) => {
@@ -42,6 +43,8 @@ const createSpace = async (req, res) => {
 const getSpaces = async (req, res) => {
   try {
     const { latitude, longitude, maxDistance } = req.query;
+    console.log("here");
+    console.log(req.query)
     if (latitude && longitude) {
       const spaces = await Space.find({
         location: {
@@ -50,10 +53,11 @@ const getSpaces = async (req, res) => {
               type: 'Point',
               coordinates: [longitude, latitude]  // [longitude, latitude]
             },
-            $maxDistance: maxDistance || 10000  // Default to 10 km
+            $maxDistance: maxDistance || 0  // Default to 10 km
           }
         }
       });
+      console.log("here 2")
 
       return res.status(200).json({ status: 'success', data: spaces });
     }

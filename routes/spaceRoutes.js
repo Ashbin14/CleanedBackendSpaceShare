@@ -13,6 +13,7 @@ router.get('/get', authenticateuser, spaceController.getSpaces);
 router.get('/:id', spaceController.getSpaceById);
 router.patch('/:id', authenticateuser, upload.array('images', 5), spaceController.updateSpace);
 router.delete('/:id', authenticateuser, spaceController.deleteSpace);
+
 router.get('/spaces/user/:userId', async (req, res) => {
   try {
     console.log(req.params.userId);
