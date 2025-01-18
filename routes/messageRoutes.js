@@ -1,17 +1,17 @@
-import express from 'express';
-import { messageController } from '../controllers/messageController.js';
-import  authMiddleware  from './middleware/authUser.js';
+import express from "express";
+
+import authenticate from "./middleware/authUser.js";
+import {
+  getMessages,
+  getUsersForSidebar,
+  sendMessage,
+} from "../controllers/messageController.js";
 
 const router = express.Router();
 
-router.use(authMiddleware);
+router.get("/users", authenticate, getUsersForSidebar);
+router.get("/:id", authenticate, getMessages);
 
-router.post('/send', (req, res, next) => {
-    console.log('sendMessage route hit');
-    next();
-  }, messageController.sendMessage);
-//router.get('/conversation/:userId', messageController.getConversation);
-//router.get('/conversations', messageController.getAllConversations);
-//router.patch('/read/:messageId', messageController.markAsRead);
+router.post("/send/:id", authenticate, sendMessage);
 
 export default router;

@@ -7,38 +7,48 @@ import userProfie from "./routes/userRoute.js";
 import spaceRoutes from "./routes/spaceRoutes.js";
 import multer from "multer";
 import mbtiRoutes from "./routes/mibtRoute.js";
-import http from 'http';
-import { Server } from 'socket.io';
-import messageRoutes from './routes/messageRoutes.js';
-import { setupSocket } from './socket/socketHandler.js';
-import matchRoutes from './routes/similarityRoute.js';
+import http from "http";
+// import { Server } from "socket.io";
+import messageRoutes from "./routes/messageRoutes.js";
+// import { setupSocket } from "./socket/socketHandler.js";
+import { app, server } from "./socket/socketHandler.js";
+import matchRoutes from "./routes/similarityRoute.js";
 import path from "path";
 import { fileURLToPath } from "url";
-import bodyParser from 'body-parser';
+import bodyParser from "body-parser";
 import { seedDatabase } from "./routes/seed.js";
 
 dotenv.config();
 
-const app = express();
-const server = http.createServer(app);
+// const app = express();
+// const server = http.createServer(app);
 app.use(express.json());
 app.use(
   cors({
     credentials: true,
   })
 );
-const io = new Server(server, {
-  cors: {
-    origin: '*', 
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-  },
-});
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  })
+);
+
+app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
+// const io = new Server(server, {
+//   cors: {
+//     origin: "*",
+//     methods: ["GET", "POST", "PATCH", "DELETE"],
+//   },
+// });
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
+// app.use((req, res, next) => {
+//   req.io = io;
+//   next();
+// });
 const mongoURI = process.env.MONGODB_URI;
 if (!mongoURI) {
   console.error(
@@ -54,15 +64,15 @@ mongoose
 
 app.use("/api/auth", authRoutes);
 app.use("/uploads/", express.static("uploads"));
-app.use('/mibt',mbtiRoutes);
+app.use("/mibt", mbtiRoutes);
 
-app.use('/api/space', spaceRoutes);
-app.use('/api/matches', matchRoutes);
-app.post('/api/seed', seedDatabase);  
+app.use("/api/space", spaceRoutes);
+app.use("/api/matches", matchRoutes);
+app.post("/api/seed", seedDatabase);
 
-app.use('/profile', userProfie);
-setupSocket(io);
-app.use('/api/messages', messageRoutes);
+app.use("/profile", userProfie);
+// setupSocket(io);
+app.use("/api/messages", messageRoutes);
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
@@ -82,31 +92,31 @@ app.use((error, req, res, next) => {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.get('/spaces/:filename', (req, res) => {
+app.get("/spaces/:filename", (req, res) => {
   // console.log(req.params.filename)
-  const filePath = path.join(__dirname,'spaces', req.params.filename);
-  console.log(filePath)
+  const filePath = path.join(__dirname, "spaces", req.params.filename);
+  console.log(filePath);
 
   // Send the file
   res.sendFile(filePath, (err) => {
-      if (err) {
-          console.error('Error sending file:', err);
-          res.status(404).send('File not found');
-      }
+    if (err) {
+      console.error("Error sending file:", err);
+      res.status(404).send("File not found");
+    }
   });
 });
 
-app.get('/profile/:filename', (req, res) => {
+app.get("/profile/:filename", (req, res) => {
   // console.log(req.params.filename)
-  const filePath = path.join(__dirname,'uploads', req.params.filename);
-  console.log(filePath)
+  const filePath = path.join(__dirname, "uploads", req.params.filename);
+  console.log(filePath);
 
   // Send the file
   res.sendFile(filePath, (err) => {
-      if (err) {
-          console.error('Error sending file:', err);
-          res.status(404).send('File not found');
-      }
+    if (err) {
+      console.error("Error sending file:", err);
+      res.status(404).send("File not found");
+    }
   });
 });
 
