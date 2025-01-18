@@ -6,5 +6,6 @@ const router=express.Router();
 router.get('/profile', auth, userController.getProfile);
 router.put('/profile', auth, userController.updateProfile);
 router.put('/profile/password', auth, userController.updatePassword);
+router.get('/getbyid', auth, userController.getUserById);
 
 export default router;
