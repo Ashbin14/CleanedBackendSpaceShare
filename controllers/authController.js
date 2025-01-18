@@ -55,14 +55,14 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
   try {
-    const { firstName, lastName,age,gender,phoneNumber, email, password} = req.body;
+    const { firstName, lastName,age,gender,phoneNumber, email, password,location} = req.body;
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
         status: "error",
         message: "All fields are required",
       });
     }
-    const imageFiles = req.files.map(file => file.filename);
+    const images = req.files.map(file => file.filename);
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -70,7 +70,10 @@ const register = async (req, res) => {
         message: "User already exists",
       });
     }
-
+    const geoLocation = location ? {
+      type: 'Point',
+      coordinates: [location.longitude, location.latitude]  // [longitude, latitude]
+    } : undefined;
     const user = new User({
       firstName,
       lastName,
@@ -78,13 +81,14 @@ const register = async (req, res) => {
       gender,
       phoneNumber,
       email,
+      location: geoLocation,
       password,
-      imageFiles
+      images
     });
 
     const result = await user.save();
-    result.password = undefined; 
-
+    result.password = undefined;
+ 
     res.status(201).json({
       status: "success",
       message: "Registration successful",

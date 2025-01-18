@@ -78,7 +78,7 @@ router.post('/calculate-matches', authenticateUser, async (req, res) => {
 
         // Proceed with calculating matches only after the user is found
         const matchResults = await findMBTIMatches(userId);
-
+        console.log("matchresult");
         // Construct the match document to be saved
         const matchDocument = {
             userId: userId,
@@ -132,8 +132,9 @@ router.get('/matches/',authenticateUser, async (req, res) => {
         const matchResults = await MatchResult.findOne({ userId })
             .populate({
                 path: 'matches.matchedUserId',
-                select: 'firstName lastName email age gender phoneNumber images'
+                select: 'firstName lastName email age gender phoneNumber images location'
             });
+        console.log("length", matchResults)
 
         if (!matchResults) {
             return res.status(404).json({
@@ -141,7 +142,6 @@ router.get('/matches/',authenticateUser, async (req, res) => {
                 message: 'No matches found for this user'
             });
         }
-
         const filteredMatches = matchResults.matches
             .filter(match => match.similarityScore >= minSimilarity)
             .sort((a, b) => b.similarityScore - a.similarityScore)

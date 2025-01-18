@@ -16,6 +16,7 @@ import matchRoutes from "./routes/similarityRoute.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import bodyParser from "body-parser";
+import { seedDatabase } from "./routes/seed.js";
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use("/mibt", mbtiRoutes);
 
 app.use("/api/space", spaceRoutes);
 app.use("/api/matches", matchRoutes);
+app.post("/api/seed", seedDatabase);
 
 app.use("/profile", userProfie);
 // setupSocket(io);
@@ -93,6 +95,20 @@ const __dirname = path.dirname(__filename);
 app.get("/spaces/:filename", (req, res) => {
   // console.log(req.params.filename)
   const filePath = path.join(__dirname, "spaces", req.params.filename);
+  console.log(filePath);
+
+  // Send the file
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error("Error sending file:", err);
+      res.status(404).send("File not found");
+    }
+  });
+});
+
+app.get("/profile/:filename", (req, res) => {
+  // console.log(req.params.filename)
+  const filePath = path.join(__dirname, "uploads", req.params.filename);
   console.log(filePath);
 
   // Send the file
