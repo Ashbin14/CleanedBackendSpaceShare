@@ -23,16 +23,13 @@ const analyzePersonality = async (req, res) => {
     }
     try {
         const pythonResult = await runPythonAnalysis(scores);
-        console.log("python result",pythonResult);
         const formattedResult = formatAnalysisResult(pythonResult);
-        console.log(formattedResult);
-        const mbtiAnalysis = new MBTIAnalysis({
-            userId: userId, 
-            type: formattedResult.type,
-            overallPersonalityScore: formattedResult.overallScore,
-            preferenceAlignment: formattedResult.preferenceAlignment,
-
-            preferenceBreakdown: {
+        let mbtiAnalysis = await MBTIAnalysis.findOne({ userId: userId });
+        if(mbtiAnalysis) {
+            mbtiAnalysis.type = formattedResult.type;
+            mbtiAnalysis.overallPersonalityScore = formattedResult.overallScore;
+            mbtiAnalysis.preferenceAlignment = formattedResult.preferenceAlignment;
+            mbtiAnalysis.preferenceBreakdown = {
                 EI: formattedResult.preferences.EI.preference,
                 EIPercentage: formattedResult.preferences.EI.percentage,
                 SN: formattedResult.preferences.SN.preference,
@@ -41,9 +38,25 @@ const analyzePersonality = async (req, res) => {
                 TFPercentage: formattedResult.preferences.TF.percentage,
                 JP: formattedResult.preferences.JP.preference,
                 JPPercentage: formattedResult.preferences.JP.percentage
-            },
-           
-        });
+            };
+        } else {
+            mbtiAnalysis = new MBTIAnalysis({
+                userId: userId,
+                type: formattedResult.type,
+                overallPersonalityScore: formattedResult.overallScore,
+                preferenceAlignment: formattedResult.preferenceAlignment,
+                preferenceBreakdown: {
+                    EI: formattedResult.preferences.EI.preference,
+                    EIPercentage: formattedResult.preferences.EI.percentage,
+                    SN: formattedResult.preferences.SN.preference,
+                    SNPercentage: formattedResult.preferences.SN.percentage,
+                    TF: formattedResult.preferences.TF.preference,
+                    TFPercentage: formattedResult.preferences.TF.percentage,
+                    JP: formattedResult.preferences.JP.preference,
+                    JPPercentage: formattedResult.preferences.JP.percentage
+                }
+            });
+        }
 
         await mbtiAnalysis.save();
         res.json({

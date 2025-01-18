@@ -13,18 +13,13 @@ router.post('/calculate-matches', authenticateUser, async (req, res) => {
     try {
         const userId = req.user.userId;
         console.log(userId);
-
-        // Fetch the user from the database
         const user = await User.findById(userId);
         console.log("user :", user);
-
-        // If the user is not found, throw an error
         if (!user) {
             throw new Error('User not found');
         }
         const matchResults = await findMBTIMatches(userId);
         console.log("matchresult");
-        // Construct the match document to be saved
         const matchDocument = {
             userId: userId,
             matches: matchResults.matches.map(match => ({
@@ -36,15 +31,11 @@ router.post('/calculate-matches', authenticateUser, async (req, res) => {
             totalMatches: matchResults.totalMatches,
             calculatedAt: new Date()
         };
-
-        // Update or create the match results document without a transaction
         await MatchResult.findOneAndUpdate(
             { userId: userId },
             matchDocument,
             { upsert: true, new: true }
         );
-
-        // Send success response
         res.status(200).json({
             status: 'success',
             data: {
