@@ -62,7 +62,7 @@ const register = async (req, res) => {
         message: "All fields are required",
       });
     }
-    const imageFiles = req.files.map(file => file.filename);
+    const images = req.files.map(file => file.filename);
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -83,7 +83,7 @@ const register = async (req, res) => {
       email,
       location: geoLocation,
       password,
-      imageFiles
+      images
     });
 
     const result = await user.save();
