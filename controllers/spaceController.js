@@ -3,6 +3,7 @@ import { getFileUrl } from "../config/multerconfig.js";
 import path from "path";
 import User from "../models/user.js";
 
+
 const createSpace = async (req, res) => {
   try {
     if (!req.user || !req.user.userId) {
@@ -17,6 +18,7 @@ const createSpace = async (req, res) => {
       description,
       amenities,
       flatmatePreferences,
+      booked
     } = req.body;
     const userId = req.user.userId;
     if (!location || !location.latitude || !location.longitude) {
@@ -40,6 +42,7 @@ const createSpace = async (req, res) => {
       images,
       amenities,
       flatmatePreferences,
+      booked,
     });
 
     await space.save();
@@ -52,25 +55,28 @@ const createSpace = async (req, res) => {
 
 const getSpaces = async (req, res) => {
   try {
-    const { latitude, longitude, maxDistance } = req.query;
-    if (latitude && longitude) {
+    const { maxDistance } = req.query;
+    const user = await User.findById(req.user.userId).select("location");
+    console.log("user",user)
+    if (user.location.coordinates[0] && user.location.coordinates[1]) {
       const spaces = await Space.find({
         location: {
           $near: {
             $geometry: {
               type: "Point",
-              coordinates: [longitude, latitude], // [longitude, latitude]
+              coordinates: [user.location.coordinates[0], user.location.coordinates[1]], // [longitude, latitude]
             },
-            $maxDistance: maxDistance || 10000, // Default to 10 km
-          },
-        },
+            $maxDistance: maxDistance || 10000  // Default to 10 km
+          }
+        }
       });
+      console.log("here 2")
 
       return res.status(200).json({ status: "success", data: spaces });
     }
 
     // If no geospatial query is needed, return all spaces for the authenticated user
-    const spaces = await Space.find({ userId: req.user.userId });
+    const spaces = await Space.find();
     res.status(200).json({ status: "success", data: spaces });
   } catch (error) {
     console.error("Get spaces error:", error);
@@ -86,7 +92,13 @@ const getSpaceById = async (req, res) => {
         .status(404)
         .json({ status: "error", message: "Space not found" });
     }
-    res.status(200).json({ status: "success", data: space });
+    const user = await User.findById(space.userId);
+    if(!user) {
+      return res
+        .status(404)
+        .json({ status: "error", message: "User not found" });
+    }
+    res.status(200).json({ status: "success", user: user, data: space });
   } catch (error) {
     console.error("Get space by ID error:", error);
     res.status(500).json({ status: "error", message: "Server error" });

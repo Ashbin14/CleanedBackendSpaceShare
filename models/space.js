@@ -54,6 +54,10 @@ const spaceSchema = new mongoose.Schema({
       type: String,
       enum: ['very-social', 'social', 'moderate', 'private']
     }
+  },
+  booked:{
+    type:Boolean,
+    default:false
   }
 }, {
   timestamps: true

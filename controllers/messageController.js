@@ -1,5 +1,5 @@
 import User from "../models/user.js";
-import Message from "../models/message.js";
+import Message from "../models/Message.js";
 import mongoose from "mongoose"; // Add this import
 import { getReceiverSocketId, io } from "../socket/socketHandler.js";
 
