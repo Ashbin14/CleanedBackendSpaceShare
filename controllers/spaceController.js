@@ -18,6 +18,7 @@ const createSpace = async (req, res) => {
       description,
       amenities,
       flatmatePreferences,
+      booked
     } = req.body;
     const userId = req.user.userId;
     if (!location || !location.latitude || !location.longitude) {
@@ -41,6 +42,7 @@ const createSpace = async (req, res) => {
       images,
       amenities,
       flatmatePreferences,
+      booked,
     });
 
     await space.save();

@@ -13,7 +13,60 @@ router.get('/get', authenticateuser, spaceController.getSpaces);
 router.get('/:id', spaceController.getSpaceById);
 router.patch('/:id', authenticateuser, upload.array('images', 5), spaceController.updateSpace);
 router.delete('/:id', authenticateuser, spaceController.deleteSpace);
-
+router.post('/dealdone',authenticateuser,async(req,res)=>{
+  const{spaceId}=req.body;
+  try {
+    const space= await Space.findById(spaceId)
+    if(req.user.userId!=space.userId) 
+      return res.status(200).json({
+      success:false,
+      message:"property doesnot belongs to the user and cannot edit it"
+       })
+    if(space){
+      space.booked=true;
+    }
+    
+    return res.status(200).json({
+      success:true,
+      space:{space},
+      message: "the flat is booked change the colour"
+    });
+     
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while changing the staus',
+      error: error.message
+    });
+  }
+})
+router.post('/dealcancled',authenticateuser,async(req,res)=>{
+  const{spaceId}=req.body;
+  try {
+    const space= await Space.findById(spaceId)
+    if(req.user.userId!=space.userId) 
+      return res.status(200).json({
+      success:false,
+      message:"property doesnot belongs to the user and cannot edit it"
+       })
+    if(space){
+      space.booked=false;
+    }
+    
+    return res.status(200).json({
+      success:true,
+      space:{space},
+      message: "the flat is unbooked change the colour"
+    });
+     
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while changing the staus',
+      error: error.message
+    });
+  }
+})
 router.get('/spaces/user/:userId', async (req, res) => {
   try {
     console.log(req.params.userId);
