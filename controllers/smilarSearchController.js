@@ -47,11 +47,15 @@ const findMBTIMatches = async (userId, threshold = 18) => {
         }).populate('userId');
 
         // Calculate similarity scores for all other users
-        const similarities = otherAnalyses.map(analysis => ({
-            userId: analysis.userId._id,
-            similarity: calculateSimilarityScore(currentUserAnalysis, analysis),
-            analysis
-        })).filter(match => match.similarity >= threshold);
+        const similarities = otherAnalyses
+    .filter(analysis => analysis.userId && analysis.userId._id) // Skip if userId or userId._id is missing
+    .map(analysis => ({
+        userId: analysis.userId._id,
+        similarity: calculateSimilarityScore(currentUserAnalysis, analysis),
+        analysis
+    }))
+    .filter(match => match.similarity >= threshold);
+
 
         const n = similarities.length;
 

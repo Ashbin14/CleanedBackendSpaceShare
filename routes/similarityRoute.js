@@ -4,7 +4,7 @@ import MatchResult from '../models/matcheduser.js';
 import User from '../models/user.js';
 import findMBTIMatches  from '../controllers/smilarSearchController.js';
 import authenticateUser from './middleware/authUser.js';
-import { debug } from 'console';
+import { debug, log } from 'console';
 
 
 const router = express.Router();
@@ -130,17 +130,24 @@ router.get('/matches/filter', authenticateUser, async (req, res) => {
                 message: 'No matches found for this user'
             });
         }
+        // console.log(matchResults);
+        
         let filteredMatches = matchResults.matches
             .filter(match => {
                 const matchedUser = match.matchedUserId;
-                if (match.similarityScore < minSimilarity) return false;
-                if (minAge && matchedUser.age < minAge) return false;
-                if (maxAge && matchedUser.age > maxAge) return false;
+                // console.log(matchedUser.location.coordinates)
+                if (match.similarityScore > minSimilarity) return false;
+                if (minAge && matchedUser.age > minAge) return false;
+                if (maxAge && matchedUser.age < maxAge) return false;
 
-                if (gender && matchedUser.gender !== gender) return false;
+                if(gender!=="all"){
+                    if (gender && matchedUser.gender !== gender) return false;
+                }
 
-                if (maxDistance  && matchedUser.location) {
-                    const distance = calculateDistance(latitude, longitude , matchedUser.location.latitude, matchedUser.location.longitude);
+                if (maxDistance  && matchedUser.location.coordinates !== undefined) {
+                    console.log("check")
+                    const distance = calculateDistance(latitude, longitude , matchedUser.location.coordinates[1], matchedUser.location.coordinates[0]);
+                    console.log(distance)
                     if (distance > maxDistance) return false;
                 }
                 return true;
