@@ -68,23 +68,39 @@ router.get('/spaces/filter', authenticateuser, async (req, res) => {
 
       const user = await User.findById(userId).select('location.coordinates');
       const [longitude, latitude] = user.location.coordinates;
-      const space=space.findAll();
+      const space= await Space.find();
+      let filteredMatches = [];
 
-      let filteredMatches = space.matches
-          .filter(match => {
-              if (space.userId==userId) return false
-              if (space.minRent <minRent) return false;
-              if (space.maxRent >maxRent) return false;
-              if (space.cleanlinessLevel!=cleanlinessLevel) return false;
-              if (space.roomType!=roomType) return false;
-              if(space.socializingLevel!=socializingLevel)return false;
+      space
+          .forEach((match,index) => {
+            // console.log(match)
+              if (match.userId==userId) return false
+              if (match.monthlyRent > minRent && match.monthlyRent < maxRent) return false;
+              // if (match.maxRent > maxRent) return false;
+              // if (match.flatmatePreferences.cleanlinessLevel!=cleanlinessLevel) return false;
+              if (match.roomType!=roomType) return false;
+              // if(match.flatmatePreferences.socializingLevel!=socializingLevel)return false;
 
-              if (maxDistance && matchedUser.location) {
-                  const distance = calculateDistance(latitude, longitude , space.location.latitude, space.location.longitude);
-                  if (distance > maxDistance) return false;
+              let distance = 0;
+              if (maxDistance && match.location) {
+                distance = calculateDistance(
+                  latitude,
+                  longitude,
+                  match.location.coordinates[1],
+                  match.location.coordinates[0]
+                );
+          
+                if ( maxDistance < distance ) {
+                  return false;
+                }
+          
+                // Attach the calculated distance to the match for later use
+                // match.distance = distance;
               }
-              return true;
+              filteredMatches.push({"location":match.location, "amenities": match.amenities, "_id": match._id, "userId": match.userId,"title": match.title, "monthlyRent": match.monthlyRent, "roomType": match.roomType, "description": match.description, "images": match.images, "createdAt": match.createdAt, "updatedAt": match.updatedAt, "distance": distance})
           })
+
+        
 
       res.status(200).json({
           status: 'success',

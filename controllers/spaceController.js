@@ -53,16 +53,16 @@ const createSpace = async (req, res) => {
 
 const getSpaces = async (req, res) => {
   try {
-    const { latitude, longitude, maxDistance } = req.query;
-    console.log("here");
-    console.log(req.query)
-    if (latitude && longitude) {
+    const { maxDistance } = req.query;
+    const user = await User.findById(req.user.userId).select("location");
+    console.log("user",user)
+    if (user.location.coordinates[0] && user.location.coordinates[1]) {
       const spaces = await Space.find({
         location: {
           $near: {
             $geometry: {
               type: "Point",
-              coordinates: [longitude, latitude], // [longitude, latitude]
+              coordinates: [user.location.coordinates[0], user.location.coordinates[1]], // [longitude, latitude]
             },
             $maxDistance: maxDistance || 10000  // Default to 10 km
           }
@@ -74,7 +74,7 @@ const getSpaces = async (req, res) => {
     }
 
     // If no geospatial query is needed, return all spaces for the authenticated user
-    const spaces = await Space.find({ userId: req.user.userId });
+    const spaces = await Space.find();
     res.status(200).json({ status: "success", data: spaces });
   } catch (error) {
     console.error("Get spaces error:", error);
