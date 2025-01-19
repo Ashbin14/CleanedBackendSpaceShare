@@ -8,10 +8,8 @@ import spaceRoutes from "./routes/spaceRoutes.js";
 import multer from "multer";
 import mbtiRoutes from "./routes/mibtRoute.js";
 import http from "http";
-// import { Server } from "socket.io";
 import messageRoutes from "./routes/messageRoutes.js";
-// import { setupSocket } from "./socket/socketHandler.js";
-import { app, server } from "./socket/socketHandler.js";
+import { app, io, server } from "./socket/socketHandler.js";
 import matchRoutes from "./routes/similarityRoute.js";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -20,35 +18,19 @@ import { seedDatabase } from "./routes/seed.js";
 
 dotenv.config();
 
-// const app = express();
-// const server = http.createServer(app);
+// Middleware setup
 app.use(express.json());
 app.use(
   cors({
-    credentials: true,
-  })
-);
-app.use(
-  cors({
-    origin: "*",
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
 
-app.use("/api/auth", authRoutes);
-app.use("/api/messages", messageRoutes);
-// const io = new Server(server, {
-//   cors: {
-//     origin: "*",
-//     methods: ["GET", "POST", "PATCH", "DELETE"],
-//   },
-// });
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use((req, res, next) => {
-//   req.io = io;
-//   next();
-// });
+
+// MongoDB connection
 const mongoURI = process.env.MONGODB_URI;
 if (!mongoURI) {
   console.error(
@@ -62,17 +44,17 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/uploads/", express.static("uploads"));
 app.use("/mibt", mbtiRoutes);
-
 app.use("/api/space", spaceRoutes);
 app.use("/api/matches", matchRoutes);
 app.post("/api/seed", seedDatabase);
-
 app.use("/profile", userProfie);
-// setupSocket(io);
 app.use("/api/messages", messageRoutes);
+
+// Error handling middleware
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
@@ -89,15 +71,13 @@ app.use((error, req, res, next) => {
   res.status(500).json({ error: error.message });
 });
 
+// File serving routes
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.get("/spaces/:filename", (req, res) => {
-  // console.log(req.params.filename)
   const filePath = path.join(__dirname, "spaces", req.params.filename);
   console.log(filePath);
-
-  // Send the file
   res.sendFile(filePath, (err) => {
     if (err) {
       console.error("Error sending file:", err);
@@ -107,11 +87,8 @@ app.get("/spaces/:filename", (req, res) => {
 });
 
 app.get("/profile/:filename", (req, res) => {
-  // console.log(req.params.filename)
   const filePath = path.join(__dirname, "uploads", req.params.filename);
   console.log(filePath);
-
-  // Send the file
   res.sendFile(filePath, (err) => {
     if (err) {
       console.error("Error sending file:", err);
@@ -120,5 +97,6 @@ app.get("/profile/:filename", (req, res) => {
   });
 });
 
+// Start the server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
