@@ -116,40 +116,58 @@ router.get('/matches/filter', authenticateUser, async (req, res) => {
 
         const skip = (page - 1) * limit;
 
+        // Validate user and location
         const user = await User.findById(userId).select('location.coordinates');
+        if (!user || !user.location || !Array.isArray(user.location.coordinates)) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'User location or coordinates are missing'
+            });
+        }
         const [longitude, latitude] = user.location.coordinates;
+
+        // Validate match results
         const matchResults = await MatchResult.findOne({ userId })
             .populate({
                 path: 'matches.matchedUserId',
                 select: 'firstName lastName email age gender phoneNumber images location'
             });
 
-        if (!matchResults) {
+        if (!matchResults || !Array.isArray(matchResults.matches)) {
             return res.status(404).json({
                 status: 'error',
-                message: 'No matches found for this user'
+                message: 'No matches found or matches data is missing'
             });
         }
-        // console.log(matchResults);
-        
+
+        // Filter matches
         let filteredMatches = matchResults.matches
             .filter(match => {
                 const matchedUser = match.matchedUserId;
-                // console.log(matchedUser.location.coordinates)
-                if (match.similarityScore > minSimilarity) return false;
+                if (!matchedUser) return false; // Skip if matchedUserId is null
+
+                console
+                if (match.similarityScore < minSimilarity) return false;
                 if (minAge && matchedUser.age > minAge) return false;
                 if (maxAge && matchedUser.age < maxAge) return false;
 
-                if(gender!=="all"){
-                    if (gender && matchedUser.gender !== gender) return false;
+                if (gender !== "all" && gender && matchedUser.gender !== gender) return false;
+
+                if (maxDistance) {
+                    if (matchedUser.location && Array.isArray(matchedUser.location.coordinates)) {
+                        const distance = calculateDistance(
+                            latitude,
+                            longitude,
+                            matchedUser.location.coordinates[1],
+                            matchedUser.location.coordinates[0]
+                        );
+                        console.log(distance);
+                        if (distance > maxDistance) return false;
+                    } else {
+                        return false; // Skip if coordinates are missing
+                    }
                 }
 
-                if (maxDistance  && matchedUser.location.coordinates !== undefined) {
-                    console.log("check")
-                    const distance = calculateDistance(latitude, longitude , matchedUser.location.coordinates[1], matchedUser.location.coordinates[0]);
-                    console.log(distance)
-                    if (distance > maxDistance) return false;
-                }
                 return true;
             })
             .sort((a, b) => b.similarityScore - a.similarityScore)
@@ -172,6 +190,7 @@ router.get('/matches/filter', authenticateUser, async (req, res) => {
         });
     }
 });
+
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const toRadians = (degrees) => degrees * (Math.PI / 180); 
     const R = 6371; 

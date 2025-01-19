@@ -75,12 +75,15 @@ router.get('/spaces/filter', authenticateuser, async (req, res) => {
           .forEach((match,index) => {
             // console.log(match)
               if (match.userId==userId) return false
+              console.log("Rent",match.monthlyRent > minRent && match.monthlyRent < maxRent)
               if (match.monthlyRent > minRent && match.monthlyRent < maxRent) return false;
               // if (match.maxRent > maxRent) return false;
               // if (match.flatmatePreferences.cleanlinessLevel!=cleanlinessLevel) return false;
+              console.log("roomType", match.roomType!=roomType)
               if (match.roomType!=roomType) return false;
               // if(match.flatmatePreferences.socializingLevel!=socializingLevel)return false;
-
+              console.log("coordinates", match.location.coordinates)
+              console.log("user", match)
               let distance = 0;
               if (maxDistance && match.location) {
                 distance = calculateDistance(
@@ -89,6 +92,7 @@ router.get('/spaces/filter', authenticateuser, async (req, res) => {
                   match.location.coordinates[1],
                   match.location.coordinates[0]
                 );
+                console.log(distance)
           
                 if ( maxDistance < distance ) {
                   return false;

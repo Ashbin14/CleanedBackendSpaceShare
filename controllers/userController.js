@@ -16,8 +16,14 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { firstName, lastName, email } = req.body;
+    console.log(req.body)
+    const { firstName, lastName, phoneNumber, email, age, location } = req.body;
     
+    const geoLocation = location ? {
+      type: 'Point',
+      coordinates: [location.longitude, location.latitude]  // [longitude, latitude]
+    } : undefined;
+
     const emailExists = await User.findOne({ 
       email, 
       _id: { $ne: req.user.id } 
@@ -33,6 +39,9 @@ const updateProfile = async (req, res) => {
         firstName,
         lastName,
         email,
+        phoneNumber,
+        age,
+        location: geoLocation,
       },
       { new: true }
     ).select('-password');
@@ -47,12 +56,20 @@ const updateProfile = async (req, res) => {
 const updatePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
+    console.log(req.body)
     const user = await User.findById(req.user.id);
+    console.log(user.password)
+    // const pwd= await bcrypt.compare()
+    // console.log()
     const isMatch = await bcrypt.compare(currentPassword, user.password);
+    console.log(isMatch)
     if (!isMatch) {
       return res.status(400).json({ message: 'Current password is incorrect' });
     }
     const salt = await bcrypt.genSalt(10);
+    const pwd = await bcrypt.hash(currentPassword, salt);
+    console.log("pwd", pwd);
+    
     user.password = await bcrypt.hash(newPassword, salt);
     await user.save();
     res.json({ message: 'Password updated successfully' });
