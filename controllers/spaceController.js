@@ -56,26 +56,31 @@ const createSpace = async (req, res) => {
 const getSpaces = async (req, res) => {
   try {
     const { maxDistance } = req.query;
-    const user = await User.findById(req.user.userId).select("location");
-    console.log("user",user)
-    if (user.location.coordinates[0] && user.location.coordinates[1]) {
-      const spaces = await Space.find({
-        location: {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [user.location.coordinates[0], user.location.coordinates[1]], // [longitude, latitude]
-            },
-            $maxDistance: maxDistance || 10000  // Default to 10 km
-          }
-        }
-      });
-      console.log("here 2")
 
-      return res.status(200).json({ status: "success", data: spaces });
-    }
+    // Fetch user and validate location data
+    const user = await User.findById(req.user.userId);
+    console.log("user", user);
 
-    // If no geospatial query is needed, return all spaces for the authenticated user
+    // if (user && user.location && Array.isArray(user.location.coordinates) && user.location.coordinates.length === 2) {
+    //   const spaces = await Space.find({
+    //     location: {
+    //       $near: {
+    //         $geometry: {
+    //           type: "Point",
+    //           coordinates: [user.location.coordinates[0], user.location.coordinates[1]], // [longitude, latitude]
+    //         },
+    //         $maxDistance: maxDistance || 10000, // Default to 10 km
+    //       },
+    //     },
+    //   });
+    //   console.log("here 2");
+
+    //   return res.status(200).json({ status: "success", data: spaces });
+    // } else {
+    //   console.warn("User location data is missing or invalid.");
+    // }
+
+    // If no geospatial query is needed, return all spaces
     const spaces = await Space.find();
     res.status(200).json({ status: "success", data: spaces });
   } catch (error) {
@@ -83,6 +88,7 @@ const getSpaces = async (req, res) => {
     res.status(500).json({ status: "error", message: "Server error" });
   }
 };
+
 
 const getSpaceById = async (req, res) => {
   try {

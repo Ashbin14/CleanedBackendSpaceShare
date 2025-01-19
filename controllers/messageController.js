@@ -24,46 +24,70 @@ export const getMessages = async (req, res) => {
     const { id: userToChatId } = req.params;
     const myId = req.user.userId;
 
-    // Debug logs
-    console.log("userToChatId:", userToChatId);
-    console.log("myId:", myId);
-    console.log("req.user:", req.user);
-    console.log(
-      "Is userToChatId valid:",
-      mongoose.Types.ObjectId.isValid(userToChatId)
-    );
-    console.log("Is myId valid:", mongoose.Types.ObjectId.isValid(myId));
-
-    // First try without immediate validation to see the values
-    try {
-      // Convert string IDs to ObjectId
-      const myObjectId = new mongoose.Types.ObjectId(myId);
-      const userToChatObjectId = new mongoose.Types.ObjectId(userToChatId);
-
-      const messages = await Message.find({
-        $or: [
-          { senderId: myObjectId, receiverId: userToChatObjectId },
-          { senderId: userToChatObjectId, receiverId: myObjectId },
-        ],
-      }).sort({ createdAt: 1 });
-
-      console.log("Retrieved messages:", messages);
-      res.status(200).json(messages);
-    } catch (idError) {
-      console.log("Error converting IDs:", idError);
-      res.status(400).json({
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userToChatId)) {
+      return res.status(400).json({
         error: "Invalid user ID format",
         details: {
           userToChatId,
           myId,
-          userToChatIdValid: mongoose.Types.ObjectId.isValid(userToChatId),
+          userToChatIdValid: false,
           myIdValid: mongoose.Types.ObjectId.isValid(myId),
         },
       });
     }
+
+    // Convert to ObjectId
+    const myObjectId = new mongoose.Types.ObjectId(myId);
+    const userToChatObjectId = new mongoose.Types.ObjectId(userToChatId);
+
+    const messages = await Message.find({
+      $or: [
+        { senderId: myObjectId, receiverId: userToChatObjectId },
+        { senderId: userToChatObjectId, receiverId: myObjectId },
+      ],
+    }).sort({ createdAt: 1 });
+
+    res.status(200).json(messages);
   } catch (error) {
-    console.log("Error in getMessages controller: ", error.message);
+    console.error("Error in getMessages controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// In messageController.js
+export const getChatList = async (req, res) => {
+  try {
+    // Use req.user.userId since that's what your auth middleware sets
+    // const { id: userToChatId } = req.params;
+    const userId = req.user.userId;
+    console.log("hello", userId);
+    if (!userId) {
+      return res.status(400).json({ error: "User ID not found" });
+    }
+
+    const messages = await Message.find({
+      $or: [{ senderId: userId }, { receiverId: userId }],
+    }).sort({ createdAt: -1 });
+
+    // Get unique conversation partners
+    const conversationPartners = new Set();
+    const uniqueConversations = [];
+
+    messages.forEach((message) => {
+      const partnerId =
+        message.senderId === userId ? message.receiverId : message.senderId;
+
+      if (!conversationPartners.has(partnerId)) {
+        conversationPartners.add(partnerId);
+        uniqueConversations.push(message);
+      }
+    });
+
+    res.json(uniqueConversations);
+  } catch (error) {
+    console.error("Error in getChatList:", error);
+    res.status(500).json({ error: "Error fetching chat list" });
   }
 };
 
