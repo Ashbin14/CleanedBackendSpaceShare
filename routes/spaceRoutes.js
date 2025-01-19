@@ -17,6 +17,11 @@ router.post('/dealdone',authenticateuser,async(req,res)=>{
   const{spaceId}=req.body;
   try {
     const space= await Space.findById(spaceId)
+    if(req.user.userId!=space.userId) 
+      return res.status(200).json({
+      success:false,
+      message:"property doesnot belongs to the user and cannot edit it"
+       })
     if(space){
       space.booked=true;
     }
