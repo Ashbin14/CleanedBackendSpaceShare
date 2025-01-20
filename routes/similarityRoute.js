@@ -132,7 +132,7 @@ router.get('/matches/filter', authenticateUser, async (req, res) => {
                 path: 'matches.matchedUserId',
                 select: 'firstName lastName email age gender phoneNumber images location'
             });
-
+        //console.log(matchResults)
         if (!matchResults || !Array.isArray(matchResults.matches)) {
             return res.status(404).json({
                 status: 'error',
@@ -144,15 +144,18 @@ router.get('/matches/filter', authenticateUser, async (req, res) => {
         let filteredMatches = matchResults.matches
             .filter(match => {
                 const matchedUser = match.matchedUserId;
-                if (!matchedUser) return false; // Skip if matchedUserId is null
-
-                console
+                console.log(matchedUser)
+                if (!matchedUser) return false; 
+                console.log(1);
                 if (match.similarityScore < minSimilarity) return false;
-                if (minAge && matchedUser.age > minAge) return false;
-                if (maxAge && matchedUser.age < maxAge) return false;
-
-                if (gender !== "all" && gender && matchedUser.gender !== gender) return false;
-
+                console.log(2);
+                console.log(minAge , matchedUser.age);
+                 if(minAge && matchedUser.age < minAge) return false;
+                console.log(3);
+                if (maxAge && matchedUser.age > maxAge) return false;
+                console.log("here");
+                if (gender &&( matchedUser.gender !== gender||gender==="all")) return false;
+                console.log(4);
                 if (maxDistance) {
                     if (matchedUser.location && Array.isArray(matchedUser.location.coordinates)) {
                         const distance = calculateDistance(
@@ -172,7 +175,7 @@ router.get('/matches/filter', authenticateUser, async (req, res) => {
             })
             .sort((a, b) => b.similarityScore - a.similarityScore)
             .slice(skip, skip + parseInt(limit));
-
+        console.log(filteredMatches)
         res.status(200).json({
             status: 'success',
             data: {
