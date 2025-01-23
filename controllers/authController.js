@@ -207,7 +207,7 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    const resetLink = `http://localhost:5174/reset-password/${token}`;
+    const resetLink = `http://localhost:5173/reset-password/${token}`;
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -236,7 +236,7 @@ const sendVerificationEmail = async (user) => {
     user.emailVerificationExpires = Date.now() + 24 * 3600000; // 24 hours
     await user.save();
 
-    const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+    const verificationLink = `http://localhost:5173/verify-email/${token}`;
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
